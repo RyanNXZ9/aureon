@@ -1,0 +1,30 @@
+[package]
+name = "aureon"
+version = "0.1.1"
+description = "Auréon — Assistente nativo em Rust para automacao Google AI Pro"
+authors = ["Auréon"]
+edition = "2021"
+
+[lib]
+name = "aureon_lib"
+crate-type = ["rlib"]
+
+[build-dependencies]
+winresource = "0.1"
+
+[dependencies]
+eframe = { version = "=0.29.1", default-features = false, features = ["glow", "default_fonts"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", default-features = false, features = ["stream", "rustls-tls"] }
+futures-util = "0.3"
+zip = "2"
+xz2 = "0.1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+[profile.release]
+strip = true
+lto = "thin"
+
