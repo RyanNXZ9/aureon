@@ -1,6 +1,6 @@
 # Auréon
 
-**Auréon** é uma aplicação desktop nativa para Windows construída **100% em Tauri v2 + Rust (backend) + React/TypeScript (frontend)**, sem nenhuma dependência de Python. Ela transforma todo o fluxo de linha de comando em um assistente visual guiado, leve (~5–8 MB), em português e simples para qualquer usuário final.
+**Auréon** é uma aplicação desktop nativa para Windows escrita em Rust, com interface eframe/egui. O repositório também contém a interface web auxiliar em React, TypeScript e Vite. O fluxo de automação roda no backend Rust, sem depender de Python.
 
 ---
 
@@ -15,17 +15,85 @@ Em vez de exigir instalação de Python, bibliotecas externas ou execução manu
 
 ---
 
-## Estrutura Inicial do Repositório
+## Capturas de tela
+
+### Diagnóstico do ambiente
+
+![Tela de diagnóstico do Auréon](docs/images/aureon-diagnostico.png)
+
+### Etapas de acumulação
+
+![Tela de acumulação do Auréon](docs/images/aureon-acumulacao.png)
+
+## Como executar no Windows
+
+### Requisitos
+
+- Windows 10 ou 11, 64 bits.
+- Rust stable com o alvo MSVC (`x86_64-pc-windows-msvc`). Instale pelo [rustup](https://rustup.rs/).
+- Visual Studio Build Tools com a carga **Desenvolvimento para desktop com C++** e o Windows SDK.
+
+Feche e reabra o terminal depois de instalar o Rust. Confira a toolchain com:
+
+```powershell
+rustup toolchain install stable-x86_64-pc-windows-msvc
+rustup default stable-x86_64-pc-windows-msvc
+rustc --version
+cargo --version
+```
+
+### Iniciar a aplicação desktop
+
+Na raiz do repositório, execute:
+
+```powershell
+cargo run --manifest-path src-tauri/Cargo.toml
+```
+
+O primeiro build baixa as crates Rust e pode levar alguns minutos. Para compilar a versão otimizada sem iniciar o app:
+
+```powershell
+cargo build --release --manifest-path src-tauri/Cargo.toml
+```
+
+O executável de release é gerado em `src-tauri/target/release/aureon.exe`.
+
+### Iniciar a interface web auxiliar
+
+Para rodar a interface React/Vite em desenvolvimento, instale as dependências uma vez e inicie o servidor:
+
+```powershell
+npm ci
+npm run dev
+```
+
+O Vite mostra no terminal o endereço local para abrir no navegador. Esse comando inicia a interface web; para abrir a aplicação desktop, use o comando Cargo acima.
+
+## Como pedir para uma IA executar
+
+Abra o projeto no Codex ou em outra ferramenta de programação com acesso ao terminal e envie:
+
+```text
+Na raiz deste projeto, execute a aplicação desktop Auréon com:
+cargo run --manifest-path src-tauri/Cargo.toml
+
+Se o build falhar, não altere os arquivos ainda. Mostre o comando executado e o erro completo, identifique a dependência ou ferramenta ausente e me explique o próximo passo.
+```
+
+Se quiser apenas a interface web, peça à IA para executar `npm ci` (na primeira vez) e depois `npm run dev`.
+
+## Estrutura do Repositório
 
 ```text
 aureon/
-├── README.md                  # Visão geral e guia inicial do projeto
-├── .gitignore                 # Arquivos ignorados pelo Git
+├── README.md
 ├── docs/
-│   ├── ARCHITECTURE.md        # Arquitetura 100% Rust + Tauri v2 + React/Tailwind
-│   └── REFERENCE.md           # Referência técnica dos scripts legados e ajustes validados
-└── reference/
-    └── legacy-cli/            # Scripts originais de referência (apenas documentação histórica)
+│   ├── ARCHITECTURE.md
+│   ├── REFERENCE.md
+│   └── images/                # Capturas de tela exibidas acima
+├── src/                       # Interface React/Vite auxiliar
+├── src-tauri/                 # Aplicação desktop e backend Rust
+└── reference/legacy-cli/      # Scripts antigos mantidos como referência
 ```
 
 ---
@@ -34,12 +102,5 @@ aureon/
 
 - [Arquitetura 100% Rust + Tauri v2](docs/ARCHITECTURE.md)
 - [Referência do Sistema Legado](docs/REFERENCE.md)
-
 ---
 
-## Próximos Passos (Roadmap)
-
-- [ ] **Fase 1 — Ambiente de Build:** Instalar toolchain Rust (`rustup` + MSVC C++ Build Tools) e inicializar o scaffold **Tauri v2 + React/TypeScript + Tailwind CSS**.
-- [ ] **Fase 2 — Core Engine em Rust (`src-tauri`):** Implementar módulos Rust para ADB (`tokio::process::Command`), download/extração automática (`reqwest`, `zip`, `xz2`), leitura SQLite do `library.db` (`rusqlite`) e execução de eventos via `adb shell` em tempo real.
-- [ ] **Fase 3 — Interface Guiada (`src/`):** Construir as telas de Status do Emulador, Verificador de Ofertas, Stepper de Ativação (Passos 1 a 4) e Console de Logs recolhível.
-- [ ] **Fase 4 — Build e Distribuição:** Gerar instalador nativo `.exe` / `.msi` leve (~5–8 MB) e 100% autônomo para Windows.
