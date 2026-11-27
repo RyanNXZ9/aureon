@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import type { EnvReport, OfferItem, SolariEvent, StepId } from "@/types/aureon";
+import type { EnvReport, OfferItem, AureonEvent, StepId } from "@/types/aureon";
 
 export function isTauriRuntime(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -40,13 +40,13 @@ export async function openSubscriptionsUrl(): Promise<void> {
   return invoke<void>("open_subscriptions_url");
 }
 
-export async function onSolariEvent(
-  handler: (event: SolariEvent) => void
+export async function onAureonEvent(
+  handler: (event: AureonEvent) => void
 ): Promise<UnlistenFn> {
   if (!isTauriRuntime()) {
     return () => {};
   }
-  return listen<SolariEvent>("solari://event", (e) => {
+  return listen<AureonEvent>("aureon://event", (e) => {
     handler(e.payload);
   });
 }

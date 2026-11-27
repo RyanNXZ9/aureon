@@ -2,7 +2,7 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const solariBadgeVariants = cva(
+const aureonBadgeVariants = cva(
   "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
   {
     variants: {
@@ -23,8 +23,8 @@ const solariBadgeVariants = cva(
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof solariBadgeVariants> {}
+    VariantProps<typeof aureonBadgeVariants> {}
 
 export function Badge({ className, variant, ...props }: BadgeProps) {
-  return <span className={cn(solariBadgeVariants({ variant }), className)} {...props} />;
+  return <span className={cn(aureonBadgeVariants({ variant }), className)} {...props} />;
 }

@@ -14,7 +14,7 @@ Os scripts originais em Python/Batch que serviram de prova de conceito para o **
 | `MODULE_B64` (`module_521.apk`) | `assets/module_521.apk` embutido diretamente via `include_bytes!()` |
 | `ensure_frida_server()` + `frida.attach()` | `runner.rs` usando o binário standalone `frida-inject-16.5.9-android-<arch>` via `adb shell` + `stdout` JSON |
 | `read_purchase_token()` (`sqlite3`) | `sqlite_token.rs` usando `rusqlite` (`bundled`) sobre cópia temporária de `library.db` |
-| `FRIDA_JS` + `build_js()` | `assets/billing_runner.js` parametrizado em Rust e enviado para `/data/local/tmp/solari_task.js` |
+| `FRIDA_JS` + `build_js()` | `assets/billing_runner.js` parametrizado em Rust e enviado para `/data/local/tmp/aureon_task.js` |
 
 ---
 

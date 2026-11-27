@@ -2,6 +2,10 @@
 node_modules/
 dist/
 src-tauri/target/
+*.tsbuildinfo
+
+# Local release artifacts
+/release/
 
 # Runtime / Local Tools
 platform-tools/

@@ -52,11 +52,11 @@ src-tauri/
 
 1. O módulo `device.rs` detecta a arquitetura do emulador via `adb shell getprop ro.product.cpu.abi` (`x86_64`, `arm64-v8a`, etc.).
 2. Na primeira execução, `runner.rs` baixa o utilitário standalone oficial **`frida-inject-16.5.9-android-<arch>.xz`** direto do GitHub Releases, descompacta em memória com `xz2` e faz cache local em `%LOCALAPPDATA%\Auréon\bin\`, enviando-o para `/data/local/tmp/` no Android junto com `module_521.apk`.
-3. Para consultar ofertas ou iniciar uma etapa, `runner.rs` gera o script JS configurado para o plano (`pro12`, `pro6`, `pro6b`, `pro6c`), envia para `/data/local/tmp/solari_task.js` e executa via `tokio::process::Command`:
+3. Para consultar ofertas ou iniciar uma etapa, `runner.rs` gera o script JS configurado para o plano (`pro12`, `pro6`, `pro6b`, `pro6c`), envia para `/data/local/tmp/aureon_task.js` e executa via `tokio::process::Command`:
    ```text
-   adb -s <serial> shell /data/local/tmp/frida-inject -p <pid> -s /data/local/tmp/solari_task.js
+   adb -s <serial> shell /data/local/tmp/frida-inject -p <pid> -s /data/local/tmp/aureon_task.js
    ```
-4. No script JS, a função `S(obj)` emite `console.log("__SOLARI__" + JSON.stringify(obj))`. O `BufReader` assíncrono do Rust lê cada linha em tempo real, faz o parse JSON com `serde_json` e dispara `app.emit("solari://event", payload)` diretamente para a interface React!
+4. No script JS, a função `S(obj)` emite `console.log("__AUREON__" + JSON.stringify(obj))`. O `BufReader` assíncrono do Rust lê cada linha em tempo real, faz o parse JSON com `serde_json` e dispara `app.emit("aureon://event", payload)` diretamente para a interface React!
 
 ---
 
@@ -66,7 +66,7 @@ src-tauri/
 | :--- | :--- | :--- |
 | `check_environment()` | `EnvReport` + progresso | Localiza/baixa ADB, conecta nas portas do emulador (`16384`, `7555`, etc.), ativa `adb root`, valida pacotes Play Store e Google One e prepara binários no `/data/local/tmp/`. |
 | `list_offers()` | `Vec<OfferItem>` | Executa consulta somente-leitura (`LIST_ONLY = true`) no SKU `g1.2tb.ai.subs_variant` e retorna todas as ofertas com preço e duração. |
-| `start_step(step_id)` | Stream `solari://event` | Executa `pro12` (sem stack) ou `pro6` / `pro6b` / `pro6c` (extraindo `purchaseToken` via `sqlite_token.rs` e aplicando `SubscriptionUpdateParams` com `mode = 5`), aguardando `purchase_cb`. |
+| `start_step(step_id)` | Stream `aureon://event` | Executa `pro12` (sem stack) ou `pro6` / `pro6b` / `pro6c` (extraindo `purchaseToken` via `sqlite_token.rs` e aplicando `SubscriptionUpdateParams` com `mode = 5`), aguardando `purchase_cb`. |
 | `cancel_active_task()` | `()` | Encerra imediatamente qualquer processo `adb` em andamento caso o usuário cancele na UI. |
 | `open_subscriptions_url()` | `()` | Abre `https://play.google.com/store/account/subscriptions` no navegador ou dentro do emulador para conferência/cancelamento final. |
 

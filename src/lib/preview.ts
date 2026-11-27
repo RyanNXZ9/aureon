@@ -1,4 +1,4 @@
-import type { EnvCheckItem, EnvReport, OfferItem, SolariEvent, StepId } from "@/types/aureon";
+import type { EnvCheckItem, EnvReport, OfferItem, AureonEvent, StepId } from "@/types/aureon";
 
 export const DEFAULT_ENV_CHECKS: EnvCheckItem[] = [
   { id: "adb", label: "ADB (Android Debug Bridge)", status: "pending" },
@@ -82,7 +82,7 @@ export interface PreviewController {
  * Simulador leve para testar todo o fluxo do wizard no navegador
  * quando o backend Tauri/Rust não está ativo.
  */
-export function createPreviewController(emit: (event: SolariEvent) => void): PreviewController {
+export function createPreviewController(emit: (event: AureonEvent) => void): PreviewController {
   let cancelled = false;
   let activeTimers: number[] = [];
 

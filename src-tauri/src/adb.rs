@@ -22,13 +22,13 @@ pub fn configure_command(cmd: &mut Command) {
     }
 }
 
-/// Retorna o diretório de cache de binários do Solari (`%LOCALAPPDATA%\Solari\bin`).
-pub fn solari_bin_dir() -> Result<PathBuf, String> {
+/// Retorna o diretório de cache de binários do Aureon (`%LOCALAPPDATA%\Aureon\bin`).
+pub fn aureon_bin_dir() -> Result<PathBuf, String> {
     #[cfg(windows)]
     {
         if let Ok(local) = std::env::var("LOCALAPPDATA") {
             if !local.trim().is_empty() {
-                return Ok(PathBuf::from(local).join("Solari").join("bin"));
+                return Ok(PathBuf::from(local).join("Aureon").join("bin"));
             }
         }
         if let Ok(profile) = std::env::var("USERPROFILE") {
@@ -36,11 +36,11 @@ pub fn solari_bin_dir() -> Result<PathBuf, String> {
                 return Ok(PathBuf::from(profile)
                     .join("AppData")
                     .join("Local")
-                    .join("Solari")
+                    .join("Aureon")
                     .join("bin"));
             }
         }
-        Err("Não foi possível resolver %LOCALAPPDATA% para cache do Solari.".to_string())
+        Err("Não foi possível resolver %LOCALAPPDATA% para cache do Aureon.".to_string())
     }
     #[cfg(not(windows))]
     {
@@ -49,11 +49,11 @@ pub fn solari_bin_dir() -> Result<PathBuf, String> {
                 return Ok(PathBuf::from(home)
                     .join(".local")
                     .join("share")
-                    .join("solari")
+                    .join("aureon")
                     .join("bin"));
             }
         }
-        Ok(std::env::temp_dir().join("solari-bin"))
+        Ok(std::env::temp_dir().join("aureon-bin"))
     }
 }
 
@@ -67,7 +67,7 @@ fn candidate_adb_paths() -> Vec<PathBuf> {
         }
     }
 
-    if let Ok(bin_dir) = solari_bin_dir() {
+    if let Ok(bin_dir) = aureon_bin_dir() {
         #[cfg(windows)]
         list.push(bin_dir.join("platform-tools").join("adb.exe"));
         #[cfg(not(windows))]
@@ -117,7 +117,7 @@ async fn test_adb_executable(path: &str) -> bool {
     }
 }
 
-/// Procura `adb.exe` no `ADB_PATH`, cache do Solari, caminhos padrão do MuMu Player 12 e `PATH`.
+/// Procura `adb.exe` no `ADB_PATH`, cache do Aureon, caminhos padrão do MuMu Player 12 e `PATH`.
 pub async fn find_adb() -> Option<String> {
     for path in candidate_adb_paths() {
         if path.is_file() {
@@ -137,9 +137,9 @@ pub async fn find_adb() -> Option<String> {
     None
 }
 
-/// Baixa e extrai `platform-tools-latest-windows.zip` em `%LOCALAPPDATA%\Solari\bin\`.
+/// Baixa e extrai `platform-tools-latest-windows.zip` em `%LOCALAPPDATA%\Aureon\bin\`.
 pub async fn download_platform_tools() -> Result<String, String> {
-    let bin_dir = solari_bin_dir()?;
+    let bin_dir = aureon_bin_dir()?;
     tokio::fs::create_dir_all(&bin_dir)
         .await
         .map_err(|e| format!("Falha ao criar diretório {}: {}", bin_dir.display(), e))?;

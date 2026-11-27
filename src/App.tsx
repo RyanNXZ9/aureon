@@ -12,11 +12,11 @@ import {
   checkEnvironment,
   isTauriRuntime,
   listOffers,
-  onSolariEvent,
+  onAureonEvent,
   openSubscriptionsUrl,
   startStep,
 } from "@/lib/tauri";
-import type { EnvCheckItem, EnvReport, OfferItem, SolariEvent, StepId } from "@/types/aureon";
+import type { EnvCheckItem, EnvReport, OfferItem, AureonEvent, StepId } from "@/types/aureon";
 
 function formatNow(): string {
   return new Date().toLocaleTimeString("pt-BR", { hour12: false });
@@ -72,8 +72,8 @@ export function App() {
     setActiveStepId((curr) => (curr === stepId ? null : curr));
   }, []);
 
-  const handleSolariEvent = useCallback(
-    (event: SolariEvent) => {
+  const handleAureonEvent = useCallback(
+    (event: AureonEvent) => {
       switch (event.type) {
         case "log":
           appendLog(event.level, event.message, event.timestamp);
@@ -161,8 +161,8 @@ export function App() {
   );
 
   const previewController = useMemo(
-    () => createPreviewController(handleSolariEvent),
-    [handleSolariEvent]
+    () => createPreviewController(handleAureonEvent),
+    [handleAureonEvent]
   );
 
   useEffect(() => {
@@ -177,7 +177,7 @@ export function App() {
     let unlisten: (() => void) | undefined;
     let active = true;
 
-    onSolariEvent(handleSolariEvent)
+    onAureonEvent(handleAureonEvent)
       .then((fn) => {
         if (active) {
           unlisten = fn;
@@ -193,7 +193,7 @@ export function App() {
       active = false;
       unlisten?.();
     };
-  }, [appendLog, handleSolariEvent, isTauri]);
+  }, [appendLog, handleAureonEvent, isTauri]);
 
   const handleRunEnvCheck = async () => {
     setStep1Error(null);

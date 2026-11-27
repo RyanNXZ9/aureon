@@ -3,7 +3,7 @@ use crate::device;
 use crate::runner::{self, TaskMode};
 use crate::sqlite_token;
 use crate::types::{
-    AppState, CheckStatus, EnvCheckItem, EnvReport, EventEmitter, OfferItem, SolariEvent, StepId,
+    AppState, CheckStatus, EnvCheckItem, EnvReport, EventEmitter, OfferItem, AureonEvent, StepId,
 };
 use std::sync::Arc;
 use tokio::process::Command;
@@ -31,7 +31,7 @@ fn update_and_emit(
     checks[index].detail = detail;
     runner::emit_event(
         app,
-        SolariEvent::EnvProgress {
+        AureonEvent::EnvProgress {
             item: checks[index].clone(),
         },
     );
@@ -374,7 +374,7 @@ pub async fn cancel_active_task(
         }
         runner::emit_log(&app, "warn", "Tarefa ativa cancelada pelo usuário.");
     }
-    runner::emit_event(&app, SolariEvent::Cancelled);
+    runner::emit_event(&app, AureonEvent::Cancelled);
     Ok(())
 }
 

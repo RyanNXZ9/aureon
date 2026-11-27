@@ -1,7 +1,7 @@
 use crate::commands::{self, DISCORD_URL, SUBSCRIPTIONS_URL};
 use crate::runner;
 use crate::types::{
-    AppState, CheckStatus, EnvCheckItem, EnvReport, EventEmitter, OfferItem, SolariEvent, StepId,
+    AppState, CheckStatus, EnvCheckItem, EnvReport, EventEmitter, OfferItem, AureonEvent, StepId,
     UiMessage,
 };
 use eframe::egui::{
@@ -251,7 +251,7 @@ fn clean_display_text(raw: &str) -> String {
     if raw.contains(r"\platform-tools\adb.exe") {
         return r"...\bin\platform-tools\adb.exe".to_string();
     }
-    raw.replace(r"\Solari\", r"\Aureon\")
+    raw.replace(r"\Aureon\", r"\Aureon\")
 }
 
 // ============================================================================
@@ -753,19 +753,19 @@ impl AureonApp {
         while let Ok(msg) = self.rx.try_recv() {
             match msg {
                 UiMessage::Event(ev) => match ev {
-                    SolariEvent::Log {
+                    AureonEvent::Log {
                         level,
                         message,
                         timestamp,
                     } => {
                         self.append_log_ts(&level, message, timestamp);
                     }
-                    SolariEvent::EnvProgress { item } => {
+                    AureonEvent::EnvProgress { item } => {
                         if let Some(slot) = self.env_checks.iter_mut().find(|c| c.id == item.id) {
                             *slot = item;
                         }
                     }
-                    SolariEvent::Offer { offer } => {
+                    AureonEvent::Offer { offer } => {
                         if let Some(existing) = self.offers.iter_mut().find(|o| {
                             o.product == offer.product && o.offer_id == offer.offer_id
                         }) {
@@ -774,7 +774,7 @@ impl AureonApp {
                             self.offers.push(offer);
                         }
                     }
-                    SolariEvent::Chosen {
+                    AureonEvent::Chosen {
                         product,
                         offer_id,
                         period,
@@ -784,11 +784,11 @@ impl AureonApp {
                             format!("Oferta selecionada: {} ({}) em {}", offer_id, period, product),
                         );
                     }
-                    SolariEvent::Launched { msg, .. } => {
+                    AureonEvent::Launched { msg, .. } => {
                         self.step3_status = Some(msg);
                         self.step3_error = None;
                     }
-                    SolariEvent::PurchaseCb { step_id, code, msg } => {
+                    AureonEvent::PurchaseCb { step_id, code, msg } => {
                         if code == 0 {
                             self.mark_sub_step_completed(step_id);
                             self.step3_status = Some(format!(
@@ -807,7 +807,7 @@ impl AureonApp {
                             ));
                         }
                     }
-                    SolariEvent::StepDone {
+                    AureonEvent::StepDone {
                         step_id,
                         success,
                         message,
@@ -822,14 +822,14 @@ impl AureonApp {
                             self.step3_error = Some(message);
                         }
                     }
-                    SolariEvent::Error { message } => {
+                    AureonEvent::Error { message } => {
                         self.append_log("error", message.clone());
                         self.is_checking_env = false;
                         self.is_loading_offers = false;
                         self.active_step_id = None;
                         self.step3_error = Some(message);
                     }
-                    SolariEvent::Cancelled => {
+                    AureonEvent::Cancelled => {
                         self.active_step_id = None;
                         self.is_checking_env = false;
                         self.is_loading_offers = false;

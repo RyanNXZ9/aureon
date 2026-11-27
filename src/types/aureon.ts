@@ -85,7 +85,7 @@ export const ACCUMULATION_STEPS: AccumulationStepDef[] = [
   },
 ];
 
-export type SolariEvent =
+export type AureonEvent =
   | { type: "log"; level: "info" | "warn" | "error" | "ok"; message: string; timestamp: string }
   | { type: "env_progress"; item: EnvCheckItem }
   | { type: "offer"; offer: OfferItem }

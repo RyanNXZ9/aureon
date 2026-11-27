@@ -1,4 +1,4 @@
-// Solari Billing Runner (injected into Google One via frida-inject 16.5.9)
+// Aureon Billing Runner (injected into Google One via frida-inject 16.5.9)
 var dexLoader = null, ctxRef = null, clientRef = null;
 var PRODUCTS = __PRODUCTS__;
 var PREFER = __PREFER__;
@@ -8,7 +8,7 @@ var STACK_MODE = __STACK_MODE__;
 var STACK = __STACK__;
 
 function L(v) { Java.classFactory.loader = v; }
-function S(o) { console.log("__SOLARI__" + JSON.stringify(o)); }
+function S(o) { console.log("__AUREON__" + JSON.stringify(o)); }
 
 function periodRank(p) {
   var m = { "P1Y": 12, "P12M": 12, "P6M": 6, "P3M": 3, "P1M": 1 };

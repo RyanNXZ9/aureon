@@ -28,15 +28,15 @@ async fn try_read_once(adb_path: &str, serial: &str, sku_filter: &str) -> Result
     adb::shell(adb_path, serial, &copy_cmd).await?;
 
     let local_db: PathBuf = std::env::temp_dir().join(format!(
-        "solari_lib_read_{}.db",
+        "aureon_lib_read_{}.db",
         std::process::id()
     ));
     let local_wal: PathBuf = std::env::temp_dir().join(format!(
-        "solari_lib_read_{}.db-wal",
+        "aureon_lib_read_{}.db-wal",
         std::process::id()
     ));
     let local_shm: PathBuf = std::env::temp_dir().join(format!(
-        "solari_lib_read_{}.db-shm",
+        "aureon_lib_read_{}.db-shm",
         std::process::id()
     ));
 

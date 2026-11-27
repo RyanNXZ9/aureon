@@ -78,7 +78,7 @@ pub struct OfferItem {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
-pub enum SolariEvent {
+pub enum AureonEvent {
     Log {
         level: String,
         message: String,
@@ -118,7 +118,7 @@ pub enum SolariEvent {
 
 #[derive(Debug)]
 pub enum UiMessage {
-    Event(SolariEvent),
+    Event(AureonEvent),
     EnvFinished(Result<EnvReport, String>),
     OffersFinished(Result<Vec<OfferItem>, String>),
     StepFinished {
@@ -138,7 +138,7 @@ impl EventEmitter {
         Self { tx, ctx }
     }
 
-    pub fn emit(&self, event: SolariEvent) {
+    pub fn emit(&self, event: AureonEvent) {
         let _ = self.tx.send(UiMessage::Event(event));
         self.ctx.request_repaint();
     }

@@ -2,7 +2,7 @@
 
 use crate::adb;
 use crate::device;
-use crate::types::{EventEmitter, OfferItem, SolariEvent, StepId};
+use crate::types::{EventEmitter, OfferItem, AureonEvent, StepId};
 use std::io::{self, Cursor};
 use std::path::PathBuf;
 use std::process::Stdio;
@@ -20,9 +20,9 @@ pub const SKU_PRO_5TB: &str = "g1.2tb.ai.subs_variant";
 
 pub const REMOTE_MODULE_APK: &str = "/data/local/tmp/module_521.apk";
 pub const REMOTE_FRIDA_INJECT: &str = "/data/local/tmp/frida-inject";
-pub const REMOTE_JS_PATH: &str = "/data/local/tmp/solari_task.js";
+pub const REMOTE_JS_PATH: &str = "/data/local/tmp/aureon_task.js";
 
-const SOLARI_PREFIX: &str = "__SOLARI__";
+const AUREON_PREFIX: &str = "__AUREON__";
 
 #[derive(Debug, Clone)]
 pub enum TaskMode {
@@ -41,14 +41,14 @@ pub fn now_timestamp() -> String {
     format!("{:02}:{:02}:{:02}", h, m, s)
 }
 
-pub fn emit_event(app: &EventEmitter, event: SolariEvent) {
+pub fn emit_event(app: &EventEmitter, event: AureonEvent) {
     app.emit(event);
 }
 
 pub fn emit_log(app: &EventEmitter, level: &str, message: impl Into<String>) {
     emit_event(
         app,
-        SolariEvent::Log {
+        AureonEvent::Log {
             level: level.to_string(),
             message: message.into(),
             timestamp: now_timestamp(),
@@ -76,13 +76,13 @@ fn period_to_months(period: &str) -> u32 {
     }
 }
 
-/// Garante o binário `frida-inject-16.5.9-android-<arch>` em `%LOCALAPPDATA%\Solari\bin\`.
+/// Garante o binário `frida-inject-16.5.9-android-<arch>` em `%LOCALAPPDATA%\Aureon\bin\`.
 pub async fn ensure_frida_inject_cached(
     abi: &str,
     app: Option<&EventEmitter>,
 ) -> Result<PathBuf, String> {
     let arch = abi_to_frida_arch(abi);
-    let bin_dir = adb::solari_bin_dir()?;
+    let bin_dir = adb::aureon_bin_dir()?;
     let cached_path = bin_dir.join(format!("frida-inject-{}-android-{}", FRIDA_VERSION, arch));
 
     if let Ok(meta) = tokio::fs::metadata(&cached_path).await {
@@ -186,7 +186,7 @@ pub async fn prepare_device_binaries(
         if let Some(a) = app {
             emit_log(a, "info", "Enviando module_521.apk para o emulador...");
         }
-        let tmp_apk = std::env::temp_dir().join(format!("solari_mod_{}.apk", std::process::id()));
+        let tmp_apk = std::env::temp_dir().join(format!("aureon_mod_{}.apk", std::process::id()));
         tokio::fs::write(&tmp_apk, MODULE_APK_BYTES)
             .await
             .map_err(|e| format!("Falha ao gravar module_521.apk temporário: {}", e))?;
@@ -246,7 +246,7 @@ async fn kill_child(child: &mut tokio::process::Child, active_child_pid: &Arc<Mu
     let _ = child.wait().await;
 }
 
-/// Executa o `frida-inject` em streaming e processa eventos `__SOLARI__`.
+/// Executa o `frida-inject` em streaming e processa eventos `__AUREON__`.
 pub async fn run_billing_task(
     app: &EventEmitter,
     active_child_pid: Arc<Mutex<Option<u32>>>,
@@ -275,10 +275,10 @@ pub async fn run_billing_task(
     };
 
     let js_content = build_task_js(prefer, list_only, old_token, stack_mode, stack)?;
-    let local_js = std::env::temp_dir().join(format!("solari_task_{}.js", std::process::id()));
+    let local_js = std::env::temp_dir().join(format!("aureon_task_{}.js", std::process::id()));
     tokio::fs::write(&local_js, js_content.as_bytes())
         .await
-        .map_err(|e| format!("Falha ao gravar solari_task.js temporário: {}", e))?;
+        .map_err(|e| format!("Falha ao gravar aureon_task.js temporário: {}", e))?;
     let push_js_res = adb::push(adb_path, serial, &local_js, REMOTE_JS_PATH).await;
     let _ = tokio::fs::remove_file(&local_js).await;
     push_js_res?;
@@ -339,10 +339,10 @@ pub async fn run_billing_task(
             line_res = lines.next_line() => {
                 match line_res {
                     Ok(Some(line)) => {
-                        let Some(idx) = line.find(SOLARI_PREFIX) else {
+                        let Some(idx) = line.find(AUREON_PREFIX) else {
                             continue;
                         };
-                        let json_str = line[idx + SOLARI_PREFIX.len()..].trim();
+                        let json_str = line[idx + AUREON_PREFIX.len()..].trim();
                         let Ok(val) = serde_json::from_str::<serde_json::Value>(json_str) else {
                             continue;
                         };
@@ -371,7 +371,7 @@ pub async fn run_billing_task(
                                     is_free,
                                 };
                                 offers.push(offer.clone());
-                                emit_event(app, SolariEvent::Offer { offer });
+                                emit_event(app, AureonEvent::Offer { offer });
                             }
                             "list_only" => {
                                 completed = true;
@@ -381,20 +381,20 @@ pub async fn run_billing_task(
                                 let product = val.get("product").and_then(|v| v.as_str()).unwrap_or("").to_string();
                                 let offer_id = val.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
                                 let period = val.get("period").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                                emit_event(app, SolariEvent::Chosen { product, offer_id, period });
+                                emit_event(app, AureonEvent::Chosen { product, offer_id, period });
                             }
                             "launched" => {
                                 if let TaskMode::ExecuteStep { step_id, .. } = mode {
                                     let code = val.get("code").and_then(|v| v.as_i64()).unwrap_or(-1) as i32;
                                     let msg = val.get("msg").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                                    emit_event(app, SolariEvent::Launched { step_id, code, msg: msg.clone() });
+                                    emit_event(app, AureonEvent::Launched { step_id, code, msg: msg.clone() });
 
                                     if code == 0 {
                                         let instruction = "Checkout aberto no emulador! Confira se hoje está R$ 0,00, conclua a assinatura na Play Store e clique no próximo passo.".to_string();
                                         emit_log(app, "ok", &instruction);
                                         emit_event(
                                             app,
-                                            SolariEvent::StepDone {
+                                            AureonEvent::StepDone {
                                                 step_id,
                                                 success: true,
                                                 message: instruction,
@@ -415,7 +415,7 @@ pub async fn run_billing_task(
                                 if let TaskMode::ExecuteStep { step_id, .. } = mode {
                                     let code = val.get("code").and_then(|v| v.as_i64()).unwrap_or(-1) as i32;
                                     let msg = val.get("msg").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                                    emit_event(app, SolariEvent::PurchaseCb { step_id, code, msg: msg.clone() });
+                                    emit_event(app, AureonEvent::PurchaseCb { step_id, code, msg: msg.clone() });
 
                                     let success = code == 0;
                                     let summary = if success {
@@ -423,7 +423,7 @@ pub async fn run_billing_task(
                                     } else {
                                         format!("Checkout finalizado com código {}: {}", code, msg)
                                     };
-                                    emit_event(app, SolariEvent::StepDone { step_id, success, message: summary });
+                                    emit_event(app, AureonEvent::StepDone { step_id, success, message: summary });
                                 }
                                 completed = true;
                                 break;
@@ -479,14 +479,14 @@ pub async fn run_billing_task(
     if let Some(err_msg) = fatal_error {
         emit_event(
             app,
-            SolariEvent::Error {
+            AureonEvent::Error {
                 message: err_msg.clone(),
             },
         );
         if let TaskMode::ExecuteStep { step_id, .. } = mode {
             emit_event(
                 app,
-                SolariEvent::StepDone {
+                AureonEvent::StepDone {
                     step_id,
                     success: false,
                     message: err_msg.clone(),
@@ -498,15 +498,15 @@ pub async fn run_billing_task(
 
     if !completed {
         if was_cancelled {
-            emit_event(app, SolariEvent::Cancelled);
+            emit_event(app, AureonEvent::Cancelled);
             return Err("Operação cancelada pelo usuário.".to_string());
         }
         let msg = "O processo frida-inject encerrou antes de concluir a operação.".to_string();
-        emit_event(app, SolariEvent::Error { message: msg.clone() });
+        emit_event(app, AureonEvent::Error { message: msg.clone() });
         if let TaskMode::ExecuteStep { step_id, .. } = mode {
             emit_event(
                 app,
-                SolariEvent::StepDone {
+                AureonEvent::StepDone {
                     step_id,
                     success: false,
                     message: msg.clone(),
